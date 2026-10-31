@@ -42,8 +42,9 @@ fun IndexedFilesScreen(category: FileCategory?, title: String, onBack: () -> Uni
     val scope = rememberCoroutineScope()
     val status by FileIndex.state.collectAsState()
     var limit by remember(category) { mutableIntStateOf(200) }
-    var sort by rememberSaveable(category) { mutableStateOf(FileIndex.Sort.DATE) }
-    var ascending by rememberSaveable(category) { mutableStateOf(false) }
+    val savedSort = remember(category) { FileActionPreferences.categorySort(context, category?.name ?: "search")?.split(":") }
+    var sort by rememberSaveable(category) { mutableStateOf(FileIndex.Sort.entries.firstOrNull { it.name == savedSort?.getOrNull(0) } ?: FileIndex.Sort.DATE) }
+    var ascending by rememberSaveable(category) { mutableStateOf(savedSort?.getOrNull(1)?.toBooleanStrictOrNull() ?: false) }
     var sortMenu by remember { mutableStateOf(false) }
     var totalBytes by remember(category) { mutableStateOf<Long?>(null) }
     var page by remember(category) { mutableStateOf(FileIndex.Page(emptyList(), false)) }
@@ -134,6 +135,7 @@ fun IndexedFilesScreen(category: FileCategory?, title: String, onBack: () -> Uni
                                     onClick = {
                                         if (mode == sort) ascending = !ascending
                                         else { sort = mode; ascending = mode == FileIndex.Sort.NAME }
+                                        FileActionPreferences.saveCategorySort(context, category?.name ?: "search", sort.name, ascending)
                                         limit = 200
                                         sortMenu = false
                                     })

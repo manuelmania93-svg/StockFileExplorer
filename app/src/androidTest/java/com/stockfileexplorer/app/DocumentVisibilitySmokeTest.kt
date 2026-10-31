@@ -35,6 +35,15 @@ class DocumentVisibilitySmokeTest {
         return device.hasObject(By.textContains(text))
     }
 
+    // The list recomposes while the index refreshes, which can invalidate a node between find and click.
+    private fun clickText(device: UiDevice, text: String) {
+        repeat(5) {
+            try { if (device.wait(Until.hasObject(By.text(text)), 5000)) { device.findObject(By.text(text)).click(); return } }
+            catch (_: androidx.test.uiautomator.StaleObjectException) { Thread.sleep(300) }
+        }
+        throw AssertionError("Could not click '$text'")
+    }
+
     private fun shell(command: String): String {
         val fd = InstrumentationRegistry.getInstrumentation().uiAutomation.executeShellCommand(command)
         return ParcelFileDescriptor.AutoCloseInputStream(fd).bufferedReader().use { it.readText() }
@@ -71,7 +80,7 @@ class DocumentVisibilitySmokeTest {
 
         // Open main storage via its shortcut -> root listing.
         // (The storage card itself now opens the storage analysis.)
-        device.findObject(By.text("Main storage")).click()
+        clickText(device, "Main storage")
         assertTrue(
             "Root listing shows Download folder",
             device.wait(Until.hasObject(By.text("Download")), 8000)
@@ -79,7 +88,7 @@ class DocumentVisibilitySmokeTest {
         device.takeScreenshot(File("/sdcard/Download/sfe-$suffix-2-root.png"))
 
         // Open Download -> document fixtures must be listed.
-        device.findObject(By.text("Download")).click()
+        clickText(device, "Download")
         Thread.sleep(1500)
         device.takeScreenshot(File("/sdcard/Download/sfe-$suffix-3-download.png"))
         Log.i("SfeTest", "Download contents at assertion time: " + shell("ls -la /sdcard/Download"))

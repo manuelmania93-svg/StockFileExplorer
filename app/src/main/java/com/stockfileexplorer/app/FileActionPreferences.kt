@@ -63,6 +63,17 @@ object FileActionPreferences {
         preferences(context).edit().putStringSet("folder-shortcuts", shortcutPaths(context) - path).apply()
     }
 
+    /** Folder-browser sort order, kept across folders and app restarts. Unknown or missing values mean name. */
+    fun browserSort(context: Context): String = preferences(context).getString("browser-sort", null) ?: "NAME"
+    fun saveBrowserSort(context: Context, mode: String) {
+        preferences(context).edit().putString("browser-sort", mode).apply()
+    }
+    /** Category-list sort as "MODE:ascending", kept per category key; null when never chosen. */
+    fun categorySort(context: Context, key: String): String? = preferences(context).getString("category-sort-$key", null)
+    fun saveCategorySort(context: Context, key: String, mode: String, ascending: Boolean) {
+        preferences(context).edit().putString("category-sort-$key", "$mode:$ascending").apply()
+    }
+
     private fun preferences(context: Context) =
         context.applicationContext.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
 }

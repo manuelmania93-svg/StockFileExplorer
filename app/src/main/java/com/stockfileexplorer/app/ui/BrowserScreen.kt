@@ -190,7 +190,8 @@ fun BrowserScreen(
     var currentPath by remember { mutableStateOf(startPath) }
     var rawItems by remember { mutableStateOf<List<FileItem>>(emptyList()) }
     var loading by remember { mutableStateOf(true) }
-    var sortMode by remember { mutableStateOf(SortMode.NAME) }
+    val sortContext = androidx.compose.ui.platform.LocalContext.current
+    var sortMode by remember { mutableStateOf(SortMode.entries.firstOrNull { it.name == com.stockfileexplorer.app.FileActionPreferences.browserSort(sortContext) } ?: SortMode.NAME) }
     var showHidden by remember { mutableStateOf(false) }
     var gridView by remember { mutableStateOf(false) }
     var refreshTick by remember { mutableIntStateOf(0) }
@@ -363,7 +364,7 @@ fun BrowserScreen(
                                             }
                                         )
                                     },
-                                    onClick = { sortMode = mode; menuOpen = false }
+                                    onClick = { sortMode = mode; com.stockfileexplorer.app.FileActionPreferences.saveBrowserSort(sortContext, mode.name); menuOpen = false }
                                 )
                             }
                             DropdownMenuItem(

@@ -55,14 +55,15 @@ object Archives {
     }
 
     /** A fresh folder is allocated atomically. Existing files are never replaced. */
-    fun extract(file: File, cancelled: () -> Unit = {}, progress: (String) -> Unit = {}): File {
-        require(file.parentFile?.canWrite() == true) { "Archive folder is not writable" }
+    fun extract(file: File, cancelled: () -> Unit = {}, progress: (String) -> Unit = {}, destination: File? = null): File {
+        val parent = destination ?: file.parentFile
+        require(parent?.isDirectory == true && parent.canWrite()) { "Destination folder is not writable" }
         list(file) // Validate the entire entry table before writing.
         val base = file.nameWithoutExtension.take(100).ifBlank { "Archive" }
         var n = 0
         var root: File
         do {
-            root = File(file.parentFile, base + "_extracted" + if (n == 0) "" else " ($n)")
+            root = File(parent, base + "_extracted" + if (n == 0) "" else " ($n)")
             n++
             require(n <= 100) { "Cannot create destination folder" }
         } while (!root.mkdir())

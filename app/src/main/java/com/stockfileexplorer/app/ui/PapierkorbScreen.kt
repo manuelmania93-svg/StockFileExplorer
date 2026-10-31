@@ -103,7 +103,8 @@ fun PapierkorbScreen(onBack: () -> Unit) {
                 scope.launch {
                     val ok = withContext(Dispatchers.IO) { Trash.deletePermanently(e) }
                     Toast.makeText(context, if (ok) R.string.deleted_permanently_ok else R.string.delete_failed, Toast.LENGTH_SHORT).show()
-                    reload()
+                    FileIndex.invalidate(); reload()
+                    com.stockfileexplorer.app.data.VolumeStats.refreshAfterDelete()
                 }
             },
             onDismiss = { confirmDelete = null },
@@ -120,6 +121,7 @@ fun PapierkorbScreen(onBack: () -> Unit) {
                     val ok = withContext(Dispatchers.IO) { Trash.empty() }
                     Toast.makeText(context, if (ok) R.string.papierkorb_emptied else R.string.delete_failed, Toast.LENGTH_SHORT).show()
                     FileIndex.invalidate(); reload()
+                    com.stockfileexplorer.app.data.VolumeStats.refreshAfterDelete()
                 }
             },
             onDismiss = { confirmEmpty = false },

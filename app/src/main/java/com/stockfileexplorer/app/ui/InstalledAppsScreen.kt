@@ -86,7 +86,7 @@ fun InstalledAppsScreen(onBack: () -> Unit) {
                 InstalledApp(
                     label = ai.loadLabel(pm).toString(),
                     packageName = pi.packageName,
-                    icon = runCatching { ai.loadIcon(pm).toBitmap().asImageBitmap() }.getOrNull(),
+                    icon = null,
                     sizeBytes = size
                 )
             }.sortedBy { it.label.lowercase() }
@@ -124,8 +124,14 @@ fun InstalledAppsScreen(onBack: () -> Unit) {
                     }.padding(horizontal = 16.dp, vertical = 10.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    if (app.icon != null) {
-                        Image(bitmap = app.icon, contentDescription = null, modifier = Modifier.size(40.dp))
+                    // Icons load per visible row (small bitmap), so the list shows before any icon is decoded.
+                    val icon by androidx.compose.runtime.produceState<ImageBitmap?>(null, app.packageName) {
+                        value = withContext(Dispatchers.IO) {
+                            runCatching { context.packageManager.getApplicationIcon(app.packageName).toBitmap(96, 96).asImageBitmap() }.getOrNull()
+                        }
+                    }
+                    if (icon != null) {
+                        Image(bitmap = icon!!, contentDescription = null, modifier = Modifier.size(40.dp))
                     } else {
                         Icon(SfeIcons.Android, contentDescription = null, modifier = Modifier.size(40.dp))
                     }

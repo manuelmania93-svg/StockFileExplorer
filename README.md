@@ -1,4 +1,6 @@
-# File Explorer Control
+# File Explorer CL
+
+CL stands for Control: File Explorer CL is File Explorer Control. The app was renamed so the name fits on the home screen; the package name and update signing key are unchanged, so it installs over earlier versions.
 
 An offline Android file manager with a compact yellow-and-white dashboard. It reads shared-storage folders directly, including documents in Download, subject to Android's access restrictions. All-files access does not unlock another app's private data or bypass protected Android/data and Android/obb locations.
 
@@ -9,13 +11,16 @@ An offline Android file manager with a compact yellow-and-white dashboard. It re
 - Every file row has an overflow action menu (open, rename, share, delete); long-press still starts multi-select in the folder browser. Image files show thumbnails in the folder browser and in the Images library category.
 - Folder browser: list/grid, breadcrumbs, sorting, hidden-files toggle, thumbnails and multi-select.
 - Full-filename rename, including an editable extension. Unsafe paths and existing destination files are rejected. Rename does not alter source bytes.
-- ZIP and RAR4/RAR5 contents and extraction into a new sibling folder. Existing files are never replaced. No password-protected or split archives in this build. Maximum 10,000 entries, 10 GB extracted data and 64 MiB RAR dictionary.
+- ZIP and RAR4/RAR5 contents and extraction into a new folder named after the archive: "Extract here" (beside the archive) or "Choose folder". Existing files are never replaced. No password-protected or split archives in this build. Maximum 10,000 entries, 10 GB extracted data and 64 MiB RAR dictionary.
 - Internal picture viewer: pinch zoom and display-only rotation. Android-decodable still images; animated GIF/WebP show a still frame. Decoded image size is bounded to 2048 pixels on the longest edge.
 - Internal PDF reader: page navigation and pinch zoom. No editing, text search or password-protected PDF support.
 - Internal video player: always-visible play/pause and seek controls. MP4/H.264/AAC is tested; other containers and codecs depend on the device. Playback pauses when leaving the foreground.
 - Library categories and the 200 most recently modified shared-storage files.
 - English and German; white/yellow appearance in both system light and dark mode.
 - No ads, tracking, network permission or cloud conversion. Network tab remains a placeholder.
+- Plain-text viewer (txt, log, md, json, xml, csv, ini, conf, py, js, yml and similar; first 2 MB).
+- Open with from other apps: pictures, videos, PDF, ZIP/RAR and text files opened from another app (for example a chat) can be shown here. The file is copied into the app cache for viewing; archives are copied into Download so extraction stays there.
+- The chosen sort order in the folder browser and in category lists is remembered.
 - Other file types, such as Word documents, still use an installed external app when opened.
 
 ## Install

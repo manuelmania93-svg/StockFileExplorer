@@ -8,6 +8,7 @@ import android.os.ParcelFileDescriptor
 import android.view.ViewGroup
 import android.view.KeyEvent
 import androidx.compose.foundation.border
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.focusable
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.focus.FocusRequester
@@ -83,19 +84,24 @@ fun ViewerScreen(initialFiles: List<File>, startIndex: Int, onBack: () -> Unit) 
     var moreMenu by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
     val current = files.getOrNull(pager.currentPage)
+    // A file opened from another app is a temporary copy in our cache: viewing and sharing only, so no
+    // action here can look like it changes or deletes the original.
+    val incomingDir = remember { File(context.cacheDir, "incoming").absolutePath + "/" }
+    val viewOnly = current != null && current.absolutePath.startsWith(incomingDir)
     Scaffold(topBar = {
         TopAppBar(
             title = {
                 Column {
                     if (files.size > 1) Text(stringResource(R.string.viewer_count, pager.currentPage + 1, files.size), style = MaterialTheme.typography.labelMedium)
                     Text(current?.name ?: "", maxLines = 1, overflow = TextOverflow.Ellipsis)
+                    if (viewOnly) Text(stringResource(R.string.incoming_view_only), style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             },
             navigationIcon = { TextButton(colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.onSurface), onClick = onBack) { Text(stringResource(R.string.viewer_back)) } })
     }, bottomBar = {
         if (current != null) Row(Modifier.fillMaxWidth().navigationBarsPadding().padding(vertical = 4.dp)) {
             ViewerAction(Icons.Filled.Share, stringResource(R.string.share), Modifier.weight(1f)) { shareFiles(context, listOf(current)) }
-            ViewerAction(Icons.Filled.Delete, stringResource(R.string.delete), Modifier.weight(1f)) { confirmDelete = true }
+            if (!viewOnly) ViewerAction(Icons.Filled.Delete, stringResource(R.string.delete), Modifier.weight(1f)) { confirmDelete = true }
             ViewerAction(Icons.Filled.Info, stringResource(R.string.viewer_info), Modifier.weight(1f)) { showInfo = true }
             Box(Modifier.weight(1f)) {
                 ViewerAction(Icons.Filled.MoreVert, stringResource(R.string.viewer_more), Modifier.fillMaxWidth()) { moreMenu = true }
@@ -117,6 +123,7 @@ fun ViewerScreen(initialFiles: List<File>, startIndex: Int, onBack: () -> Unit) 
                     // Only the settled page owns a player, so swiping never leaves two videos playing.
                     "video" -> if (index == pager.settledPage) VideoViewer(file)
                     "archive" -> ArchiveViewer(file)
+                    "text" -> TextViewer(file)
                 }
             }
         }
@@ -387,20 +394,33 @@ private fun ArchiveViewer(file: File) {
     }
     Column(Modifier.fillMaxSize().padding(horizontal = 16.dp)) {
         Text(stringResource(R.string.viewer_extract_policy), style = MaterialTheme.typography.bodySmall, modifier = Modifier.padding(vertical = 8.dp))
-        Button(enabled = entries != null && !busy && extracted == null, onClick = {
+        var pickFolder by remember { mutableStateOf(false) }
+        fun runExtract(destination: File?) {
             busy = true
             error = null
             scope.launch {
                 try {
                     val jobContext = coroutineContext
                     extracted = withContext(Dispatchers.IO) {
-                        Archives.extract(file, { jobContext.ensureActive() }, { name -> current = name })
+                        Archives.extract(file, { jobContext.ensureActive() }, { name -> current = name }, destination)
                     }
                     com.stockfileexplorer.app.data.ScanStore.invalidate()
                 } catch (e: Exception) { error = failed + "\n" + (e.message ?: "") }
                 finally { busy = false }
             }
-        }) { Text(stringResource(if (busy) R.string.viewer_extracting else R.string.viewer_extract)) }
+        }
+        val canExtract = entries != null && !busy && extracted == null
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            Button(enabled = canExtract, onClick = { runExtract(null) }) { Text(stringResource(if (busy) R.string.viewer_extracting else R.string.viewer_extract_here)) }
+            OutlinedButton(enabled = canExtract, onClick = { pickFolder = true }) { Text(stringResource(R.string.viewer_extract_choose)) }
+        }
+        if (pickFolder) FolderPickerDialog(
+            title = stringResource(R.string.viewer_extract_choose),
+            confirmLabel = stringResource(R.string.viewer_extract_here_short),
+            rootPath = android.os.Environment.getExternalStorageDirectory().absolutePath,
+            blockedPaths = emptySet(),
+            onConfirm = { pickFolder = false; runExtract(it) },
+            onDismiss = { pickFolder = false })
         if (busy) { LinearProgressIndicator(Modifier.fillMaxWidth()); Text(current, maxLines = 1, overflow = TextOverflow.Ellipsis) }
         extracted?.let { folder ->
             Text(stringResource(R.string.viewer_extracted, folder.absolutePath), Modifier.padding(vertical = 8.dp), style = MaterialTheme.typography.bodyMedium)
@@ -423,6 +443,48 @@ private fun ArchiveViewer(file: File) {
                     }
                     HorizontalDivider()
                 }
+            }
+        }
+    }
+}
+
+
+/** Plain-text viewer. Reads at most [TEXT_VIEW_LIMIT_BYTES] and says so when the file is longer. */
+private const val TEXT_VIEW_LIMIT_BYTES = 2L * 1024 * 1024
+
+@Composable
+private fun TextViewer(file: File) {
+    var text by remember(file.path) { mutableStateOf<String?>(null) }
+    var truncated by remember(file.path) { mutableStateOf(false) }
+    var failed by remember(file.path) { mutableStateOf(false) }
+    LaunchedEffect(file.path) {
+        withContext(Dispatchers.IO) {
+            try {
+                val total = file.length()
+                val bytes = file.inputStream().use { input ->
+                    val buffer = ByteArray(minOf(total, TEXT_VIEW_LIMIT_BYTES).toInt())
+                    var read = 0
+                    while (read < buffer.size) {
+                        val n = input.read(buffer, read, buffer.size - read)
+                        if (n < 0) break
+                        read += n
+                    }
+                    buffer.copyOf(read)
+                }
+                truncated = total > TEXT_VIEW_LIMIT_BYTES
+                text = String(bytes, Charsets.UTF_8)
+            } catch (e: Exception) {
+                failed = true
+            }
+        }
+    }
+    when {
+        failed -> ViewerError(stringResource(R.string.viewer_text_error))
+        text == null -> Text(stringResource(R.string.viewer_video_loading), Modifier.padding(20.dp))
+        else -> androidx.compose.foundation.text.selection.SelectionContainer {
+            Column(Modifier.fillMaxSize().verticalScroll(androidx.compose.foundation.rememberScrollState()).padding(12.dp)) {
+                if (truncated) Text(stringResource(R.string.viewer_text_truncated), style = MaterialTheme.typography.labelMedium)
+                Text(text.orEmpty(), style = MaterialTheme.typography.bodySmall.copy(fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace))
             }
         }
     }

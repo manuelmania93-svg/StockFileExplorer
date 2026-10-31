@@ -29,7 +29,7 @@ class BackNavigationTest {
     private val sub = File(root, "sub")
     private val german get() = context.resources.configuration.locales[0].language == "de"
     private fun label(en: String, de: String) = if (german) de else en
-    private val appName = "File Explorer Control"
+    private val appName = "File Explorer CL"
 
     private fun waitText(value: String, timeout: Long = 15000) = device.wait(Until.findObject(By.text(value)), timeout)
         ?: throw AssertionError("Missing UI text: $value")

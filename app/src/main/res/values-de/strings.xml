@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">File Explorer Control</string>
+    <string name="app_name">File Explorer CL</string>
     <string name="tab_local">Lokal</string>
     <string name="tab_library">Bibliothek</string>
     <string name="tab_network">Netzwerk</string>
     <string name="network_coming_soon">Netzwerkspeicher (SMB, FTP, Cloud) kommt in einer späteren Version.</string>
     <string name="perm_title">Zugriff auf alle Dateien nötig</string>
-    <string name="perm_body">Damit File Explorer Control die Dateien in deinem gemeinsamen Speicher anzeigen kann, auch Dokumente in Ordnern wie Download, braucht die App die Berechtigung "Zugriff auf alle Dateien". Auf dem nächsten Bildschirm den Zugriff für File Explorer Control erlauben.</string>
+    <string name="perm_body">Damit File Explorer CL die Dateien in deinem gemeinsamen Speicher anzeigen kann, auch Dokumente in Ordnern wie Download, braucht die App die Berechtigung "Zugriff auf alle Dateien". Auf dem nächsten Bildschirm den Zugriff für File Explorer CL erlauben.</string>
     <string name="perm_grant">Einstellungen öffnen</string>
     <string name="internal_storage">Interner Speicher</string>
     <string name="used_of">%1$s von %2$s belegt</string>
@@ -71,7 +71,7 @@
     <string name="viewer_video_playing">Wiedergabe läuft</string>
     <string name="viewer_video_paused">Pausiert</string>
     <string name="viewer_archive_error">Archiv kann nicht gelesen oder entpackt werden. Verschlüsselte ZIP/RAR und mehrteilige RAR werden in dieser Version nicht unterstützt. RAR-Wörterbuchlimit: 64 MiB.</string>
-    <string name="viewer_extract_policy">Entpackt in einen neuen Ordner neben dem Archiv. Vorhandene Dateien werden nie ersetzt. Limits: 10.000 Einträge, 10 GB gesamt. Diese Ansicht bis zum Abschluss offen lassen.</string>
+    <string name="viewer_extract_policy">Entpackt in einen neuen Ordner neben dem Archiv oder in einen gewählten Ordner. Vorhandene Dateien werden nie ersetzt. Limits: 10.000 Einträge, 10 GB gesamt. Diese Ansicht bis zum Abschluss offen lassen.</string>
     <string name="viewer_extract">Alle entpacken</string>
     <string name="viewer_extracting">Wird entpackt…</string>
     <string name="viewer_extracted">Entpackt nach %1$s</string>
@@ -216,4 +216,13 @@
     <string name="saved_empty">Noch nichts gespeichert.</string>
     <string name="saved_missing">Nicht mehr verfügbar</string>
     <string name="remove_saved">Verknüpfung entfernen</string>
+    <string name="viewer_text_error">Diese Textdatei kann nicht gelesen werden.</string>
+    <string name="viewer_text_truncated">Es werden die ersten 2 MB dieser Datei angezeigt.</string>
+    <string name="incoming_opening">Wird geöffnet…</string>
+    <string name="incoming_unsupported">Dieser Dateityp kann hier nicht geöffnet werden.</string>
+    <string name="incoming_view_only">Nur-Ansicht-Kopie. Die Originaldatei bleibt unverändert.</string>
+    <string name="incoming_failed">Diese Datei konnte nicht gelesen werden.</string>
+    <string name="viewer_extract_here">Hier entpacken</string>
+    <string name="viewer_extract_choose">Ordner wählen</string>
+    <string name="viewer_extract_here_short">In diesen Ordner entpacken</string>
 </resources>

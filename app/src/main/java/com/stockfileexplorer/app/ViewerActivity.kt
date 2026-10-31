@@ -29,6 +29,7 @@ class ViewerActivity : ComponentActivity() {
             "zip", "rar" -> "archive"
             "pdf" -> "pdf"
             "jpg", "jpeg", "png", "webp", "gif", "bmp", "heic", "heif", "avif" -> "image"
+            "txt", "log", "md", "json", "xml", "csv", "ini", "conf", "cfg", "py", "js", "yml", "yaml", "properties" -> "text"
             "mp4", "mkv", "webm", "avi", "mov", "3gp", "flv", "wmv", "ts" -> "video"
             else -> null
         }

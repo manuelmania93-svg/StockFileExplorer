@@ -68,17 +68,21 @@ fun DashboardScreen(
     onOpenPapierkorb: () -> Unit = {}
 ) {
     val root = remember { Environment.getExternalStorageDirectory() }
-    var totalBytes by remember { mutableStateOf(0L) }
-    var freeBytes by remember { mutableStateOf(0L) }
+    val usage by com.stockfileexplorer.app.data.VolumeStats.usage.collectAsState()
+    val totalBytes = usage?.totalBytes ?: 0L
+    val freeBytes = usage?.freeBytes ?: 0L
     val status by com.stockfileexplorer.app.data.FileIndex.state.collectAsState()
 
-    LaunchedEffect(Unit) {
-        val (total, free) = withContext(Dispatchers.IO) {
-            val stat = StatFs(root.absolutePath)
-            stat.totalBytes to stat.availableBytes
+    // Read when the dashboard appears and whenever the app comes back to the foreground, so the
+    // numbers follow deletes made elsewhere (bin, other apps) without waiting for a file scan.
+    LaunchedEffect(Unit) { withContext(Dispatchers.IO) { com.stockfileexplorer.app.data.VolumeStats.refresh(root) } }
+    val lifecycleOwner = androidx.compose.ui.platform.LocalLifecycleOwner.current
+    androidx.compose.runtime.DisposableEffect(lifecycleOwner) {
+        val observer = androidx.lifecycle.LifecycleEventObserver { _, event ->
+            if (event == androidx.lifecycle.Lifecycle.Event.ON_RESUME) Thread { com.stockfileexplorer.app.data.VolumeStats.refresh(root) }.start()
         }
-        totalBytes = total
-        freeBytes = free
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
     }
 
     val usedBytes = (totalBytes - freeBytes).coerceAtLeast(0L)
